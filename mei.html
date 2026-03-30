@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEOW</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink-light: #f9d6e8;
+            --pink-mid: #e8a0c0;
+            --pink-dark: #c4607e;
+            --pink-deep: #8b2d4a;
+            --gui-bg: #f0c8d8;
+            --slot-bg: #d8869e;
+            --slot-border-light: #fce4ef;
+            --slot-border-dark: #a0405a;
+            --text-color: #5a1a2a;
+            --shadow: #3a0a1a;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #2d0a18;
+            font-family: 'VT323', monospace;
+            color: var(--text-color);
+            user-select: none;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(255,150,180,0.03) 3px,
+                    rgba(255,150,180,0.03) 4px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(255,150,180,0.03) 3px,
+                    rgba(255,150,180,0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(255, 100, 150, 0.18) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(200, 80, 120, 0.18) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 180, 200, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sparkles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .sparkle {
+            position: absolute;
+            font-size: 1rem;
+            animation: floatUp linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes floatUp {
+            0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            10%  { opacity: 0.6; }
+            90%  { opacity: 0.6; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .title {
+            position: relative;
+            z-index: 10;
+            color: var(--pink-light);
+            font-size: 3.2rem;
+            margin-bottom: 18px;
+            letter-spacing: 4px;
+            text-shadow:
+                3px 3px 0 var(--shadow),
+                -1px -1px 0 var(--shadow),
+                0 0 20px rgba(255, 150, 180, 0.5);
+            animation: titlePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { text-shadow: 3px 3px 0 var(--shadow), 0 0 20px rgba(255,150,180,0.5); }
+            50%       { text-shadow: 3px 3px 0 var(--shadow), 0 0 35px rgba(255,150,180,0.9); }
+        }
+
+        .gui-container {
+            position: relative;
+            z-index: 10;
+            background-color: var(--gui-bg);
+            border: 4px solid var(--shadow);
+            padding: 22px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            /* Minecraft-style bevel */
+            box-shadow:
+                inset 3px 3px 0 var(--slot-border-light),
+                inset -3px -3px 0 var(--slot-border-dark),
+                6px 6px 0 var(--shadow),
+                0 0 40px rgba(200, 80, 120, 0.3);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+        .gui-container::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            background-image:
+                repeating-linear-gradient(
+                    45deg,
+                    rgba(255,255,255,0.04) 0px,
+                    rgba(255,255,255,0.04) 1px,
+                    transparent 1px,
+                    transparent 8px
+                );
+            pointer-events: none;
+            border-radius: 1px;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+
+        .crafting-section {
+            display: flex;
+            align-items: center;
+            gap: 26px;
+        }
+
+        .grid-3x3 {
+            display: grid;
+            grid-template-columns: repeat(3, 52px);
+            grid-template-rows: repeat(3, 52px);
+            gap: 4px;
+        }
+
+        .slot {
+            width: 52px;
+            height: 52px;
+            background-color: var(--slot-bg);
+            border: 3px solid;
+            border-top-color: var(--slot-border-dark);
+            border-left-color: var(--slot-border-dark);
+            border-right-color: var(--slot-border-light);
+            border-bottom-color: var(--slot-border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background-color 0.1s;
+        }
+
+        .slot:hover {
+            background-color: #e09ab5;
+        }
+
+        .slot.result {
+            width: 64px;
+            height: 64px;
+            background-color: #c06080;
+            border-top-color: var(--slot-border-dark);
+            border-left-color: var(--slot-border-dark);
+            border-right-color: var(--slot-border-light);
+            border-bottom-color: var(--slot-border-light);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+        }
+
+        .arrow-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .arrow {
+            font-size: 38px;
+            color: var(--pink-deep);
+            text-shadow: 2px 2px 0 var(--shadow);
+            animation: arrowBounce 1.5s ease-in-out infinite;
+        }
+
+        @keyframes arrowBounce {
+            0%, 100% { transform: translateX(0); }
+            50%       { transform: translateX(5px); }
+        }
+
+        .inventory-wrap {
+            border-top: 3px solid var(--slot-border-dark);
+            border-top-color: var(--slot-border-dark);
+            padding-top: 16px;
+        }
+
+        .inventory {
+            display: grid;
+            grid-template-columns: repeat(9, 52px);
+            gap: 4px;
+        }
+
+        .item {
+            width: 42px;
+            height: 42px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: transform 0.1s, filter 0.1s;
+            filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.5));
+        }
+
+        .item:hover  { transform: scale(1.12); filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.5)) brightness(1.15); }
+        .item:active { cursor: grabbing; transform: scale(0.95); }
+
+        .label {
+            margin-bottom: 6px;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--pink-deep);
+            text-shadow: 1px 1px 0 var(--slot-border-light);
+        }
+
+        .letter-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: linear-gradient(145deg, #fff0f5 0%, #ffe4ef 60%, #ffd0e8 100%);
+            border: 5px solid var(--shadow);
+            padding: 28px 24px 20px;
+            width: 320px;
+            box-shadow:
+                8px 8px 0 var(--shadow),
+                0 0 30px rgba(255, 120, 160, 0.4);
+            font-size: 1.45rem;
+            text-align: center;
+            z-index: 999;
+            color: var(--text-color);
+            line-height: 1.6;
+            opacity: 0;
+            animation: letterOpen 0.35s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+        }
+
+        @keyframes letterOpen {
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .letter-popup::before {
+            content: '🌸';
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+        }
+
+        .letter-popup .close-btn {
+            margin-top: 16px;
+            background: var(--pink-dark);
+            color: var(--pink-light);
+            border: 3px solid var(--shadow);
+            padding: 6px 18px;
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--shadow);
+            transition: transform 0.1s, box-shadow 0.1s;
+            letter-spacing: 1px;
+        }
+
+        .letter-popup .close-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--shadow);
+        }
+
+        .letter-popup .close-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--shadow);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(60px);
+            background: var(--pink-deep);
+            color: var(--pink-light);
+            padding: 8px 20px;
+            border: 3px solid var(--shadow);
+            box-shadow: 4px 4px 0 var(--shadow);
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            z-index: 500;
+            opacity: 0;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sparkles" id="sparkles"></div>
+
+    <h1 class="title">CRAFTING TABLE</h1>
+
+    <div class="gui-container">
+        <div class="crafting-section">
+            <div>
+                <div class="label">Crafting</div>
+                <div class="grid-3x3" id="crafting-grid">
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                </div>
+            </div>
+
+            <div class="arrow-wrap">
+                <div class="arrow">➔</div>
+            </div>
+
+            <div>
+                <div class="label">Result</div>
+                <div class="slot result" id="result-slot"></div>
+            </div>
+        </div>
+
+        <div class="inventory-wrap">
+            <div class="label">Inventory</div>
+            <div class="inventory" id="inventory-grid">
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="item" draggable="true" ondragstart="drag(event)" id="heart">❤️</div>
+                </div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">✨ Letter crafted!</div>
+
+    <script>
+        const sparkles = document.getElementById('sparkles');
+        const symbols = ['✿', '❀', '✾', '❁', '꩜', '·', '·', '·'];
+        for (let i = 0; i < 22; i++) {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            s.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+            s.style.left = Math.random() * 100 + 'vw';
+            s.style.fontSize = (0.6 + Math.random() * 1.2) + 'rem';
+            s.style.animationDuration = (8 + Math.random() * 14) + 's';
+            s.style.animationDelay = (Math.random() * 12) + 's';
+            s.style.color = `hsl(${320 + Math.random() * 40}, 80%, ${70 + Math.random() * 20}%)`;
+            sparkles.appendChild(s);
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const dragged = document.getElementById(data);
+            const targetSlot = ev.target.closest('.slot');
+            if (!targetSlot) return;
+            if (targetSlot.id === 'result-slot') return;
+            if (targetSlot.children.length === 0) {
+                targetSlot.appendChild(dragged);
+                checkCrafting();
+            }
+        }
+
+        let letterCrafted = false;
+
+        function checkCrafting() {
+            const gridSlots = document.querySelectorAll('#crafting-grid .slot');
+            const resultSlot = document.getElementById('result-slot');
+
+            let hasHeart = false;
+            gridSlots.forEach(slot => {
+                if (slot.querySelector('#heart')) hasHeart = true;
+            });
+
+            if (hasHeart) {
+                if (!letterCrafted && resultSlot.children.length === 0) {
+                    letterCrafted = true;
+
+                    const letter = document.createElement('div');
+                    letter.className = 'item';
+                    letter.innerHTML = '✉️';
+                    letter.id = 'letter';
+                    letter.draggable = true;
+                    letter.ondragstart = drag;
+                    letter.onclick = openLetter;
+                    letter.style.cursor = 'pointer';
+
+                    resultSlot.appendChild(letter);
+                    showToast('✨ Letter crafted!');
+                }
+            } else {
+                if (resultSlot.querySelector('#letter')) {
+                    resultSlot.innerHTML = '';
+                    letterCrafted = false; 
+                }
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function openLetter() {
+            const existing = document.getElementById('letter-popup');
+            if (existing) existing.remove();
+
+            const popup = document.createElement('div');
+            popup.id = 'letter-popup';
+            popup.className = 'letter-popup';
+
+            popup.innerHTML = `
+                <div style="font-size:1.6rem; margin-bottom:8px; letter-spacing:2px; color:#8b2d4a;">✉</div>
+                <div style="font-size:1.25rem; line-height:1.7;">
+                    hello haiii :3 happy birthday meimei. you're the bestest best fwend ever i MIGHT or might not be annoying sometimes, but that's bc i love you :r (chwia)
+                </div>
+                <button class="close-btn" onclick="document.getElementById('letter-popup').remove()">Close ✕</button>
+            `;
+
+            document.body.appendChild(popup);
+        }
+    </script>
+</body>
+</html>
